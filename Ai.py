@@ -29,15 +29,14 @@ import time as t
 import soundfile as sf
 import queue
 import cv2
-import tensorflow_io as tfio
-
+ 
 from threading import Thread
 import queue
 
 isExperimental = False
 
 gpus = tf.config.list_physical_devices('GPU')
-tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=2000)])
+tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=165)])
 logical_gpus = tf.config.list_logical_devices('GPU')
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
@@ -174,7 +173,7 @@ def experiMelSpec(dirIn, dirOut, filename, q):
 
         # Export the image using OpenCV
         qm1 = generateImage(DB, sr, hop_length + 1)
-        arr2 = 255 * qm1.to_rgba(qm1.get_array().reshape(np.shape(DB)))
+        arr2 = 255 * qm1.to_rgba(qm1.get_array().reshape((1024,324)))
         arr2[:, :, [0, 2]] = arr2[:, :, [2, 0]]
         image = cv2.resize(arr2, (640, 480))
         image = cv2.flip(image, 0)
@@ -290,19 +289,7 @@ def makeMelSpec(ai, filename):
     # variable = predictOutcome(ai, test)
 
 
-def tensorData(filename):
-    audio = tf.io.read_file(filename + ".wav")
-    # audio = tfio.audio.AudioIOTensor("C:\\Markus\\Users\\" + str(id) + "\\" + filename + ".wav")
-    audio2 = tf.audio.decode_wav(audio, desired_channels=1)
-    audio_slice = audio2[0]  # get tensor instead of array
-    # audio_tensor = tf.squeeze(audio_slice,[0])
-    audio_slice2 = tf.cast(audio_slice, tf.float32)
-    spectrogram = tfio.audio.spectrogram(
-        audio_slice, nfft=512, window=512, stride=256)
-    mel_spectrogram = tfio.audio.melscale(
-        spectrogram, rate=16000, mels=128, fmin=0, fmax=8000)
-    dbscale_mel_spectrogram = tfio.audio.dbscale(mel_spectrogram, top_db=80)
-    return dbscale_mel_spectrogram
+     
 
 
 # audio data location goes here
@@ -329,10 +316,10 @@ def startAi(ai):
     start = time.time()
     q = queue.Queue()
     if isExperimental:
-        experiMelSpec("C:\\Users\\alexa\\PycharmProjects\\MarkusHardware\\", "\\", "output", q)
-        # makeMelSpec(ai, "output")
+        experiMelSpec("/home/alex/Downloads/Markus_AI/", "/home/alex/Downloads/Markus_AI/", "output", q)
+        #makeMelSpec(ai, "output") #2.5 sec
     else:
-        tensorData("output")
+        print("output")
     stop = time.time()
     avg += (start - stop)
 
@@ -342,15 +329,14 @@ def model():
     global counter
     global avg
     global isExperimental
-    for x in range(2):
-        while counter != 100:
-            # start thread
-            startAi(model)
-            counter += 1
-        print("Average Time " + str(avg / counter))
-        isExperimental = True
-        counter = 0
-        avg = 0
+        # start thread
+    isExperimental = True
+    while counter!=101:
+        startAi(model)
+        counter += 1
+    print("Average Time " + str(avg / counter))
+    counter = 0
+    avg = 0
 
 
 # def temp():
