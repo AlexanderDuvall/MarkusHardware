@@ -29,7 +29,7 @@ import time as t
 import soundfile as sf
 import queue
 import cv2
- 
+
 from threading import Thread
 import queue
 
@@ -149,43 +149,35 @@ def generateImage(DB, sr, hop_length, **kwargs):
 # dirOut where to output file
 # filename name of file
 # q Queue for threading
-def experiMelSpec(dirIn, dirOut, filename, q):
+def experiMelSpec(dirIn, dirOut, filename):
     # Check if the image exists already
     test = dirOut + filename + ".png"
     my_file = Path(test)
-    if not my_file.is_file():
-        # Read the file
-        start = t.time()
-        y, sr = readFile(dirIn + filename)
-        load = t.time() - start
-
-        # trim silent edges
-        start = t.time()
-        whale_song, _ = librosa.effects.trim(y)
-
-        # Calculate the short-time fourier transform
-        n_fft = 2048
-        hop_length = 100
-        D = np.abs(librosa.stft(whale_song, n_fft=n_fft, hop_length=hop_length + 1))
-        DB = librosa.amplitude_to_db(D, ref=np.max)
-        calc = t.time() - start
-        start = t.time()
-
-        # Export the image using OpenCV
-        qm1 = generateImage(DB, sr, hop_length + 1)
-        arr2 = 255 * qm1.to_rgba(qm1.get_array().reshape((1024,324)))
-        arr2[:, :, [0, 2]] = arr2[:, :, [2, 0]]
-        image = cv2.resize(arr2, (640, 480))
-        image = cv2.flip(image, 0)
-
-        # Add item to the other thread
-        # q.put([test, image])
-        plt.close()
-        return load, calc, t.time() - start
-    else:
-        # Remove the image and run the algorithm
-        os.remove(test)
-        return experiMelSpec(dirIn, dirOut, filename, q)
+    # Read the file
+    start = t.time()
+    y, sr = readFile(dirIn + os.sep + filename)
+    load = t.time() - start
+    # trim silent edges
+    start = t.time()
+    whale_song, _ = librosa.effects.trim(y)
+    # Calculate the short-time fourier transform
+    n_fft = 2048
+    hop_length = 100
+    D = np.abs(librosa.stft(whale_song, n_fft=n_fft, hop_length=hop_length + 1))
+    DB = librosa.amplitude_to_db(D, ref=np.max)
+    calc = t.time() - start
+    start = t.time()
+    # Export the image using OpenCV
+    qm1 = generateImage(DB, sr, hop_length + 1)
+    arr2 = 255 * qm1.to_rgba(qm1.get_array().reshape(np.shape(DB)))
+    arr2[:, :, [0, 2]] = arr2[:, :, [2, 0]]
+    image = cv2.resize(arr2, (640, 480))
+    image = cv2.flip(image, 0)
+    # Add item to the other thread
+    cv2.imwrite(test, image)
+    plt.close()
+    count += 1
+    return load, calc, t.time() - start
 
 
 # will load the model and return it. One time setup only
@@ -289,9 +281,6 @@ def makeMelSpec(ai, filename):
     # variable = predictOutcome(ai, test)
 
 
-     
-
-
 # audio data location goes here
 
 # makeMelSpec("/home/allen/Desktop/pyPro/output")
@@ -317,7 +306,21 @@ def startAi(ai):
     q = queue.Queue()
     if isExperimental:
         experiMelSpec("/home/alex/Downloads/Markus_AI/", "/home/alex/Downloads/Markus_AI/", "output", q)
-        #makeMelSpec(ai, "output") #2.5 sec
+        # makeMelSpec(ai, "output") #2.5 sec
+    else:
+        print("output")
+    stop = time.time()
+    avg += (start - stop)
+
+
+def startAiBenchmarks(ai, FileName):
+    global avg
+    audio()
+    start = time.time()
+    q = queue.Queue()
+    if isExperimental:
+        experiMelSpec("/home/alex/Downloads/Markus_AI/", "/home/alex/Downloads/Markus_AI/", FileName, q)
+        # makeMelSpec(ai, "output") #2.5 sec
     else:
         print("output")
     stop = time.time()
@@ -329,9 +332,9 @@ def model():
     global counter
     global avg
     global isExperimental
-        # start thread
+    # start thread
     isExperimental = True
-    while counter!=101:
+    while counter != 101:
         startAi(model)
         counter += 1
     print("Average Time " + str(avg / counter))
@@ -431,4 +434,8 @@ def model():
 # t1.join()
 ##t2.join()
 ##t3.join()
-model()
+
+
+# model() START AI HERE
+
+

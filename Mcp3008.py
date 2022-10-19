@@ -1,22 +1,34 @@
-class Mcp3008:
+# First install spidev:
+# Enable SPI (sudo raspi-config)
+# $ sudo apt-get update 
+# $ sudo apt-get upgrade
+# $ sudo apt-get install python-dev
+# $ sudo reboot
+# $ wget https://github.com/doceme/py-spidev/archive/master.zip 
+# $ unzip master.zip
+# $ cd py-spidev-master
+# $ sudo python setup.py install
 
-    import busio
-    import digitalio
-    import board
-    import adafruit_mcp3xxx.mcp3008 as MCP
-    from adafruit_mcp3xxx.analog_in import AnalogIn
-    import time
+from spidev import SpiDev
 
-    while True:
-        spi = busio.SPI(clock=board.SCK_1, MISO=board.MISO_1, MOSI=board.MOSI_1)
+class MCP3008:
+    def __init__(self, bus = 0, device = 0):
+        self.bus, self.device = bus, device
+        self.spi = SpiDev()
+        self.open()
+        self.spi.max_speed_hz = 1000000 # 1MHz
 
-        cs = digitalio.DigitalInOut(board.D5)
+    def open(self):
+        self.spi.open(self.bus, self.device)
+        self.spi.max_speed_hz = 1000000 # 1MHz
+    
+    def read(self, channel = 0):
+        cmd1 = 4 | 2 | (( channel & 4) >> 2)
+        cmd2 = (channel & 3) << 6
 
-        mcp = MCP.MCP3008(spi, cs)
-
-        chan = AnalogIn(mcp, MCP.P0)
-
-        print("Raw ADC Value: ", chan.value)
-        print("ADC Voltage: " + str(chan.voltage) + "V")
-
-        time.sleep(.05)
+        adc = self.spi.xfer2([cmd1, cmd2, 0])
+        data = ((adc[1] & 15) << 8) + adc[2]
+        return data
+            
+    def close(self):
+        self.spi.close()
