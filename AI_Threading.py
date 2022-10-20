@@ -1,4 +1,6 @@
 # https://github.com/jiaaro/pydub
+import matplotlib
+matplotlib.use("Agg")
 from pathlib import Path
 
 import numpy as np
@@ -45,7 +47,7 @@ def load(modelPath):
 
 
 def setup():
-    model = load("C:\\Users\\alexa\\Markus\\Saved Model Data\\MarkusModel")
+    model = load("/home/alex/Downloads/Markus_AI/Markus-master/Saved Model Data/MarkusModel")
     return model
 
 
@@ -144,7 +146,7 @@ def experiMelSpec(dirIn, dirOut, filename):
     start = t.time()
     # Export the image using OpenCV
     qm1 = generateImage(DB, sr, hop_length + 1)
-    arr2 = 255 * qm1.to_rgba(qm1.get_array().reshape(np.shape(DB)))
+    arr2 = 255 * qm1.to_rgba(qm1.get_array().reshape((1024,327)))
     arr2[:, :, [0, 2]] = arr2[:, :, [2, 0]]
     image = cv2.resize(arr2, (640, 480))
     image = cv2.flip(image, 0)
@@ -195,10 +197,16 @@ def launchSpectrograms(listofFiles, audioDirectory, outputDirectory):
     print("show time!!")
     for file in listofFiles:
         start = t.time()
-        experiMelSpec(audioDirectory, outputDirectory, file)
+        try:
+            experiMelSpec(audioDirectory, outputDirectory, file)
+        except:
+            print("problem....")
         melspecTime = t.time()
         start2 = t.time()
-        predictOutcome(model, "C:\\Users\\alexa\\Documents\\JetsonFiles\\" + os.sep + "predict.png")
+        try:
+            predictOutcome(model, "/home/alex/Downloads/Markus_AI/testData/" + "predict.png")
+        except:
+            print("problem2....")       
         predictionTime = t.time()
         if (count > 50):
             print("clearing memory")
@@ -224,5 +232,5 @@ if __name__ == '__main__':
     # end = time.time()
     # print(start - end)
     model = setup()
-    for root, dirs, files in os.walk("C:\\Markus Project\\Holdover\\audioFiles"):
-        launchSpectrograms(files, root, "C:\\Users\\alexa\\Documents\\JetsonFiles")
+    for root, dirs, files in os.walk("/home/alex/Downloads/Markus_AI/testData"):
+        launchSpectrograms(files, root, "/home/alex/Downloads/Markus_AI/testData")
