@@ -211,7 +211,7 @@ def predictOutcome(model, imageDirectory):
 
 def launchSpectrograms(listofFiles, audioDirectory, outputDirectory):
     global count
-    timeTable = ""
+    timeTable = "MelSpecTime, Prediction Time\n"
     print("show time!!")
     for file in listofFiles:
         start = t.time()
@@ -225,6 +225,9 @@ def launchSpectrograms(listofFiles, audioDirectory, outputDirectory):
             clearMemoryNoThread()
         timeTable += str(start - melspecTime) + "," + str(start2 - predictionTime) + "\n"
     print(timeTable)
+    f = open("stats.txt","w")
+    f.write(timeTable)
+    print("I've finished. Please review the results provided.")
     # exit(1)
 
 
@@ -241,5 +244,5 @@ if __name__ == '__main__':
     # end = time.time()
     # print(start - end)
     model = setup()
-    for root, dirs, files in os.walk("C:\\Markus Project\\audioFiles"):
+    for root, dirs, files in os.walk("C:\\Markus Project\\Holdover\\audioFiles"):
         launchSpectrograms(files, root, "C:\\Users\\alexa\\Documents\\JetsonFiles")
