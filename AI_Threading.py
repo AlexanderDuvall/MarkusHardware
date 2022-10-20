@@ -1,7 +1,6 @@
 # https://github.com/jiaaro/pydub
 from pathlib import Path
 
-from pydub import AudioSegment
 import numpy as np
 import matplotlib.pyplot as plt
 import librosa
@@ -169,25 +168,6 @@ def prepareAndLaunchThreads(list, audioDirectory, outputDirectory):
         thread.join()
     memoryThread.join()
     return listOfThreads
-
-
-def bulkExportMelSpec(outputDirectory, audioFilesDirectory):
-    # Start the file writing thread here
-
-    global done
-    fileList = []
-    fileList.extend(listdir(audioFilesDirectory))
-    splitFiles = np.array_split(fileList, 4)
-
-    threadList = prepareAndLaunchThreads(splitFiles, audioFilesDirectory, outputDirectory)
-    # for x in os.listdir(audioFilesDirectory):
-    #    _, _, s = experiMelSpec(audioFilesDirectory, outputDirectory, x)
-    #    print(s)
-    done = True
-    # thread.join()
-    print('Done.')
-
-
 def predictOutcome(model, imageDirectory):
     # filePath = "Saved Model Data\\MarkusModel\\"
     # model = keras.models.load_model(filePath)
